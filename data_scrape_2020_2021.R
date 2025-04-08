@@ -22,7 +22,6 @@ tables_2020 <- readHTMLTable(response) |>
         gsub("^-$", "Money allocated to combined authority", column)
       )
     }))
-    table <- as.data.frame(table)
     return(table)
   })
 
@@ -30,7 +29,31 @@ tables_2020 <- readHTMLTable(response) |>
 #   assign(paste0("table_", i, "_2020"), tables_2020[[i]])
 # }
 
-tables_combined_2020 <- bind_rows(tables_2020) 
+rows_to_drop <- c("South East",
+                  "East Midlands", 
+                  "West Midlands", 
+                  "North West",
+                  "North East",
+                  "Yorkshire and the Humber",
+                  "East of England",
+                  "South West")
+
+tables_combined_2020 <- bind_rows(tables_2020) |>
+  filter(!`Authority (local & combined)` %in% rows_to_drop)
+  
+
+final_2020 <- left_join(authorities, 
+                        tables_combined_2020, 
+                        by = c("authority" = "Authority (local & combined)"))
+
+# number of NA appearing
+na_row_count <- sum(rowSums(is.na(final_2020)) > 0)
+print(na_row_count)
+
+# unmatched rows
+unmatched_rows <- anti_join(tables_combined_2020, 
+                            authorities, 
+                            by = c("Authority (local & combined)" = "authority"))
 
 
 # gsub("^\\s*-\\s*", "", df[[1]])
