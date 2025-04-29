@@ -12,4 +12,4 @@ upper_tier_authorities_2020 <- read.csv("ons_authorities/2020/Ward to Westminste
   distinct(ons_code, .keep_all = TRUE) |> 
   mutate(authority = paste0(authority, " UTLA"))
 
-authorities <- bind_rows(local_authories_2020, combined_authorities_2020, upper_tier_authorities_2020)
+authorities_2020 <- bind_rows(local_authories_2020, combined_authorities_2020, upper_tier_authorities_2020)

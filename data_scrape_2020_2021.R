@@ -26,9 +26,6 @@ tables_2020 <- readHTMLTable(response) |>
     return(table)
   })
 
-# for (i in seq_along(tables_2020)) {
-#   assign(paste0("table_", i, "_2020"), tables_2020[[i]])
-# }
 
 rows_to_drop <- c("South East",
                   "East Midlands", 
@@ -46,7 +43,7 @@ tables_combined_2020 <- bind_rows(tables_2020) |>
 
 # check for unmatched rows
 unmatched_rows <- anti_join(tables_combined_2020, 
-                            authorities, 
+                            authorities_2020, 
                             by = c("Authority" = "authority")) 
 
 # fixing unmatched rows (UTLAs)
@@ -59,12 +56,12 @@ tables_combined_2020 <-  tables_combined_2020 |>
 
 # check again for unmatched rows
 unmatched_rows <- anti_join(tables_combined_2020, 
-                            authorities, 
+                            authorities_2020, 
                             by = c("Authority" = "authority")) 
 
 # final data
 final_2020 <- left_join(tables_combined_2020, 
-                        authorities, 
+                        authorities_2020, 
                         by = c("Authority" = "authority"))
 
 # export
