@@ -11,10 +11,11 @@ response <- request(url_2020) |>
 
 tables_2020 <- readHTMLTable(response) |> 
   lapply(function(table) {
-    colnames(table)[1] <- "Authority (local & combined)" # renaming column 1
+    colnames(table)[1] <- "Authority" # renaming column 1
     colnames(table)[2] <- "Pothole and Challenge Fund" # renaming column 2
     table[[1]] <- gsub("^\\s*-\\s*", "", table[[1]]) # removing "-" from start of some authority names
     table[[1]] <- gsub("\\[footnote [0-9]+\\]$", "", table[[1]]) # removing "[footnote x]" from some authority names
+    table[[1]] <- gsub("Cambridgeshire & Peterborough CA", "Cambridgeshire and Peterborough CA", table[[1]])
     table[, 2:6] <- as.data.frame(lapply(table[, 2:6], function(column) { # replacing "-" with text in gsub
       ifelse(
         grepl(" CA$", table[[1]]), 
@@ -39,22 +40,39 @@ rows_to_drop <- c("South East",
                   "South West")
 
 tables_combined_2020 <- bind_rows(tables_2020) |>
-  filter(!`Authority (local & combined)` %in% rows_to_drop)
+  filter(!`Authority` %in% rows_to_drop)
   
 
-final_2020 <- left_join(authorities, 
-                        tables_combined_2020, 
-                        by = c("authority" = "Authority (local & combined)"))
 
-# number of NA appearing
-na_row_count <- sum(rowSums(is.na(final_2020)) > 0)
-print(na_row_count)
-
-# unmatched rows
+# check for unmatched rows
 unmatched_rows <- anti_join(tables_combined_2020, 
                             authorities, 
-                            by = c("Authority (local & combined)" = "authority"))
+                            by = c("Authority" = "authority")) 
+
+# fixing unmatched rows (UTLAs)
+tables_combined_2020 <-  tables_combined_2020 |> 
+  mutate(`Authority` = ifelse(
+    `Authority` %in% unmatched_rows$`Authority`,
+    paste0(`Authority`, " UTLA"),
+    `Authority`
+  ))
+
+# check again for unmatched rows
+unmatched_rows <- anti_join(tables_combined_2020, 
+                            authorities, 
+                            by = c("Authority" = "authority")) 
+
+# final data
+final_2020 <- left_join(tables_combined_2020, 
+                        authorities, 
+                        by = c("Authority" = "authority"))
+
+# export
+if (!dir.exists("output_data")) {
+  dir.create("output_data")
+}
+write.csv(final_2020, "output_data/capital_expenditure_2020.csv", row.names = FALSE)
 
 
-# gsub("^\\s*-\\s*", "", df[[1]])
-# gsub("\\[footnote \d+\\]$", "", df[[1]])
+  
+ 
